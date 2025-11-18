@@ -39,8 +39,18 @@ pipeline {
         }
 
         stage('SAST - SonarQube') {
+            environment {
+                scannerHome = tool 'sonar-scanner'
+            }
             steps {
-                echo "SAST stage (will configure after SonarQube setup)..."
+                withSonarQubeEnv('LocalSonar') {
+                    sh '''
+                        ${scannerHome}/bin/sonar-scanner \
+                        -Dsonar.projectKey=BuyMeSting \
+                        -Dsonar.sources=. \
+                        -Dsonar.host.url=http://localhost:9000
+                    '''
+                }
             }
         }
 
