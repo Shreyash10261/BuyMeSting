@@ -5,6 +5,10 @@ pipeline {
         nodejs 'node18'
     }
 
+    environment {
+        scannerHome = tool 'sonar-scanner'   // name of the Sonar scanner tool installed in Jenkins
+    }
+
     stages {
         stage('Checkout Code') {
             steps {
@@ -14,17 +18,14 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh '''
-                npm install
-                '''
+                sh 'npm install'
             }
         }
 
         stage('Build Project') {
             steps {
-                sh '''
-                npm run build || true
-                '''
+                // allow build to continue even if prod build step fails
+                sh 'npm run build || true'
             }
         }
 
@@ -39,17 +40,19 @@ pipeline {
         }
 
         stage('SAST - SonarQube') {
-            environment {
-                scannerHome = tool 'sonar-scanner'
-            }
             steps {
-                withSonarQubeEnv('LocalSonar') {
-                    sh '''
+                // bind the token stored in Jenkins credentials (id: sonar-token)
+                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                    // Optionally keep withSonarQubeEnv to set SONAR_HOST_URL (name must match Sonar installation in Jenkins)
+                    withSonarQubeEnv('LocalSonar') {
+                        sh """
                         ${scannerHome}/bin/sonar-scanner \
-                        -Dsonar.projectKey=BuyMeSting \
-                        -Dsonar.sources=. \
-                        -Dsonar.host.url=http://localhost:9000
-                    '''
+                          -Dsonar.projectKey=BuyMeSting \
+                          -Dsonar.sources=. \
+                          -Dsonar.login=${SONAR_TOKEN} \
+                          -Dsonar.host.url=${SONAR_HOST_URL}
+                        """
+                    }
                 }
             }
         }
