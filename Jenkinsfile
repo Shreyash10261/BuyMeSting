@@ -43,7 +43,7 @@ pipeline {
             steps {
                 // bind the token stored in Jenkins credentials (id: sonar-token)
                 withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                    // Optionally keep withSonarQubeEnv to set SONAR_HOST_URL (name must match Sonar installation in Jenkins)
+                    
                     withSonarQubeEnv('LocalSonar') {
                         sh """
                         ${scannerHome}/bin/sonar-scanner \
